@@ -35,7 +35,7 @@ try { pm = JSON.parse(localStorage.getItem('pm') || '{}') } catch (e) {}
 const savePm = () => { try { localStorage.setItem('pm', JSON.stringify(pm)) } catch (e) {} };
 const natcmp = (a, b) => a.name.localeCompare(b.name, 'ja', { numeric: true, sensitivity: 'base' });
 const meta = fid => cache('m:' + fid, () => api('files/' + fid, { fields: 'id,name,mimeType,parents', supportsAllDrives: true }));
-const list = fid => cache('l:' + fid, async () => {
+const listRaw = fid => cache('l:' + fid, async () => {
   let files = [], pageToken = '';
   do {
     const p = { q: `'${fid}' in parents and trashed=false`, pageSize: 1000, supportsAllDrives: true, includeItemsFromAllDrives: true,
@@ -48,6 +48,13 @@ const list = fid => cache('l:' + fid, async () => {
   files.forEach(f => { pm[f.id] = fid }); savePm();
   return { dirs: files.filter(f => f.mimeType === FOLDER).sort(natcmp), imgs: files.filter(f => f.mimeType.startsWith('image/')).sort(natcmp) };
 });
+async function list(fid) {  // キャッシュ命中時も親子対応を必ず記録する
+  const v = await listRaw(fid);
+  let changed = false;
+  for (const f of [...v.dirs, ...v.imgs]) if (pm[f.id] !== fid) { pm[f.id] = fid; changed = true }
+  if (changed) savePm();
+  return v;
+}
 async function roots() {
   return Promise.all(C.folders.map(async f => { const m = await meta(f.id); return { id: m.id, name: f.name || m.name, series: f.series } }));
 }
