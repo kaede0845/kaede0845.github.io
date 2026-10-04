@@ -1,0 +1,97 @@
+:root{--bg:#15171c;--panel:#1e2128;--line:#2e333d;--ink:#e8e6e1;--sub:#8d939e;--acc:#6aa5d6}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif}
+a{color:inherit;text-decoration:none}
+button,.btn{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:13px;cursor:pointer}
+button:hover,.btn:hover{border-color:var(--acc)}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ライブラリ */
+.lib main{max-width:720px;margin:0 auto;padding:32px 20px 60px}
+.lib h1{font-size:22px;margin:0 0 12px;letter-spacing:.04em}
+.crumbs{font-size:13px;color:var(--sub);margin-bottom:16px}
+.crumbs a{color:var(--acc)}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px}
+.item{display:flex;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:6px}
+.item+.item{border-top:1px solid var(--line)}
+.item:hover{background:#262a33}
+.item small{color:var(--sub)}
+.item.primary span{font-weight:600;color:var(--acc)}
+.empty,.error{padding:12px;margin:0;color:var(--sub)}
+.error{color:#e5a06a}
+
+/* リーダー */
+.reader-page{overflow:hidden;background:#0c0d10}
+#reader{position:fixed;inset:0;display:flex;flex-direction:column}
+#view{position:relative;flex:1;min-height:0;display:flex}
+#stage{flex:1;min-width:0;min-height:0;display:flex;justify-content:center;align-items:center;position:relative;overflow:auto}
+#pages{display:flex;height:100%;width:100%;justify-content:center;align-items:center}
+#pages.rtl{flex-direction:row-reverse}
+#pages img{max-width:100%;max-height:100%;object-fit:contain;display:block;min-width:0}
+#pages.two img{max-width:50%}
+#stage.fitw{align-items:flex-start}
+#stage.fitw #pages{height:auto;align-items:flex-start;min-height:100%}
+#stage.fitw #pages img{max-height:none;width:100%}
+#stage.fitw #pages.two img{width:50%}
+.zone{position:absolute;top:0;bottom:0;width:30%;cursor:pointer;z-index:2}
+#zl{left:0}#zr{right:0}
+#bar{display:flex;gap:10px;align-items:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);flex-wrap:wrap}
+#seek{flex:1;min-width:120px;direction:ltr;accent-color:var(--acc)}
+#seek.rtl{direction:rtl}
+#cnt{font-variant-numeric:tabular-nums;font-size:13px;color:var(--sub);min-width:72px;text-align:center}
+#ttl{font-size:13px;color:var(--sub);max-width:30vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#load{position:absolute;top:10px;right:14px;font-size:12px;color:var(--sub);z-index:3}
+
+/* シリーズカード */
+.shelf{margin:26px 0 8px;font-size:13px;font-weight:400;color:var(--sub)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 10px;font-size:17px}
+.card h2 a:hover{color:var(--acc)}
+.actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.actions .btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 6px;font-size:14px;text-align:center;min-height:56px}
+.actions .btn small{font-size:11px;color:inherit;opacity:.75}
+.btn.off{opacity:.4;cursor:default;pointer-events:none}
+.lib .card+.list{margin-top:12px}
+.btn{display:inline-block}
+[hidden]{display:none!important}
+.btn.pri{background:var(--acc);color:#0d1a26;border-color:var(--acc);font-weight:600}
+.btn.mark{border-color:var(--acc)}
+.badge{color:var(--acc)}
+
+/* 縦スクロールモード */
+#stage.scrollmode{display:block;overflow-y:auto}
+#stage.scrollmode .zone{display:none}
+#stage.scrollmode #pages{display:block;height:auto;width:100%;max-width:900px;margin:0 auto;position:relative}
+#stage.scrollmode.wide #pages{max-width:none}
+#pages.scroll img{display:block;width:100%;height:auto;max-width:none;max-height:none}
+.foot{display:flex;flex-direction:column;align-items:center;gap:14px;padding:56px 12px 110px;background:#0c0d10;color:var(--sub);font-size:13px}
+.foot p{margin:0}
+.foot .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.foot .btn{padding:10px 18px;font-size:14px}
+
+/* 読み終わりバナー(単ページ/見開き) */
+#end{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:94%;background:rgba(21,23,28,.94);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+#end span{font-size:13px;color:var(--sub)}
+
+/* お知らせ・管理 */
+.notice{border-left:3px solid var(--acc)}
+.notice .meta{font-size:12px;color:var(--sub)}
+.notice b{display:block;margin-top:2px}
+.notice p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.notice form{margin-top:10px}
+.form{display:flex;flex-direction:column;gap:12px}
+.form h2{margin:0}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--sub)}
+input[type=text],input[type=password],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{resize:vertical}
+.form .btn{align-self:flex-start;padding:8px 18px}
+.adminbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.adminbar h2{margin:0;font-size:17px}
+.flash{background:var(--panel);border:1px solid var(--acc);border-radius:6px;padding:8px 12px;margin:0 0 12px;font-size:13px}
+.btn.danger{border-color:#c0614f;color:#e59a8b}
+
+/* 特定巻鑑賞 */
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-bottom:12px}
+.chip{padding:10px 6px;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:6px;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip:hover{border-color:var(--acc)}
+.chip.cur{border-color:var(--acc);color:var(--acc);font-weight:600}
