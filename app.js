@@ -1,13 +1,13 @@
 /* index.html(Jinja)と app.py のルートをブラウザ側で再現。マークアップ/クラスは元のまま */
 (() => {
-const { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, findVolume, resolvePage, animeFor, cookiePos, vlabel, U, lastSeries } = Drv;
+const { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, firstVolume, findVolume, resolvePage, animeFor, cookiePos, vlabel, U, lastSeries } = Drv;
 const main = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let seq = 0;
 
 const actions = (c, pick = true) => `
 <div class="actions">
-  <a class="btn" href="${c.first_url}"><b>1巻から</b></a>
+  <a class="btn" href="${c.first_url}"><b>1巻から</b>${c.first_label ? `<small>${esc(c.first_label)}</small>` : ''}</a>
   ${c.anime ? `<a class="btn mark" href="${c.anime}"><b>アニメの続きから</b></a>`
     : `<span class="btn off" aria-disabled="true"><b>アニメの続きから</b><small>未設定</small></span>`}
   ${c.resume ? `<a class="btn pri" href="${c.resume.url}"><b>読み途中から</b><small>${esc(c.resume.sub)}</small></a>`
@@ -17,7 +17,8 @@ const actions = (c, pick = true) => `
 
 async function makeCard(series) {
   const sid = series.id;
-  const card = { id: sid, name: series.name, url: U.folder(sid), first_url: U.go(sid, 'first'), resume: null, anime: null };
+  const card = { id: sid, name: series.name, url: U.folder(sid), first_url: U.go(sid, 'first'), first_label: '', resume: null, anime: null };
+  try { const v = firstVolume(await volumesOf(sid)); if (v) card.first_label = vlabel(v.name) } catch (e) {}
   const pos = cookiePos(sid);
   if (pos) {
     try { card.resume = { url: U.go(sid, 'resume'), sub: vlabel((await meta(pos[0])).name) + (pos[1] ? `  ${pos[1] + 1}ページ` : '') } } catch (e) {}
@@ -33,22 +34,13 @@ const page = (title, body, crumbs = '', error = '') => {
 const fail = msg => page('エラー', '', '', msg);
 
 async function home() {
-  if (!C.folders.length) return page('設定が必要です', '', '', 'config.js の folders に参照するフォルダを指定してください。');
-  const libs = [];
-  for (const r of await roots()) libs.push({ name: r.name, series: await isSeriesRoot(r) ? [r] : (await list(r.id)).dirs });
-  const all = libs.flatMap(l => l.series);
-  if (!all.length) return page('ライブラリ', '<p class="empty">漫画フォルダがありません。</p>');
-  // 4つのボタンは1組だけ。対象は最後に読んだ作品(なければ先頭)
-  const cur = all.find(s => s.id === lastSeries()) || all[0], card = await makeCard(cur);
+  if (!C.folders.length) return page('設定が必要です', '', '', 'config.js の folders に漫画の親フォルダを指定してください。');
+  const r = (await roots())[0], card = await makeCard(r);  // 漫画は1作品のみ。ボタンも1組だけ
   let notices = [];
   try { notices = (await (await fetch('announcements.json', { cache: 'no-cache' })).json()).slice().reverse().slice(0, C.announce_limit) } catch (e) {}
   const nhtml = notices.length ? `<section class="notices" aria-label="お知らせ">${notices.map(n => `
     <div class="card notice"><div class="meta">${esc(n.created)}</div>${n.title ? `<b>${esc(n.title)}</b>` : ''}<p>${esc(n.body)}</p></div>`).join('')}</section>` : '';
-  const main_ = `<div class="card"><h2><a href="${card.url}">${esc(card.name)}</a></h2>${actions(card)}</div>`;
-  const shelves = all.length > 1 ? libs.filter(l => l.series.length).map(l =>
-    `<h2 class="shelf">${esc(libs.length > 1 ? l.name : '作品一覧')}</h2><div class="list">${l.series.map(s =>
-      `<a class="item" href="${U.folder(s.id)}"><span>${esc(s.name)}</span>${s.id === cur.id ? '<small class="badge">ボタンの対象</small>' : ''}</a>`).join('')}</div>`).join('') : '';
-  page('ライブラリ', nhtml + main_ + shelves);
+  page('ライブラリ', nhtml + `<div class="card"><h2><a href="${card.url}">${esc(card.name)}</a></h2>${actions(card)}</div>`);
 }
 
 async function folder(fid) {
@@ -88,7 +80,7 @@ async function go(sid, mode) {
   const to = u => location.replace(u);
   if (mode === 'resume') {
     const pos = cookiePos(series.id);
-    return to(pos && await ancestors(pos[0]) ? U.read(pos[0], pos[1]) : U.read(vols[0].id, 0));
+    return to(pos && await ancestors(pos[0]) ? U.read(pos[0], pos[1]) : U.read(firstVolume(vols).id, 0));
   }
   if (mode === 'anime') {
     const spec = await animeFor(series);
@@ -97,7 +89,7 @@ async function go(sid, mode) {
     if (!vol) return fail(`anime_start の巻「${spec.volume}」が見つかりません。`);
     return to(U.read(vol.id, await resolvePage(spec.page ?? 1, vol.id)));
   }
-  to(U.read(vols[0].id, 0));
+  to(U.read(firstVolume(vols).id, 0));
 }
 
 async function route() {

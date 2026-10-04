@@ -94,15 +94,7 @@ async function ancestors(fid, limit = 15) {
 /* ---------- 漫画・巻 ---------- */
 const volNum = n => { const m = n.match(/(\d+(?:\.\d+)?)\D*$/); return m ? parseFloat(m[1]) : null };
 const vlabel = n => { const m = n.match(/(?:^|[_\-\s])v(\d+(?:\.\d+)?)$/i); return m ? parseFloat(m[1]) + '巻' : n };
-const seriesRootCache = {};
-async function isSeriesRoot(r) {
-  if (r.series !== null && r.series !== undefined) return !!r.series;
-  if (!(r.id in seriesRootCache)) {
-    const { dirs, imgs } = await list(r.id);
-    seriesRootCache[r.id] = dirs.length ? (await list(dirs[0].id)).imgs.length > 0 : imgs.length > 0;
-  }
-  return seriesRootCache[r.id];
-}
+const isSeriesRoot = async () => true;  // 設定フォルダ=漫画1作品(中に巻フォルダ)で固定
 async function seriesOf(chain) {
   const root = (await roots()).find(r => r.id === chain[0].id);
   return chain.length === 1 || await isSeriesRoot(root) ? { id: root.id, name: root.name } : chain[1];
@@ -110,6 +102,10 @@ async function seriesOf(chain) {
 async function volumesOf(sid) {
   const { dirs, imgs } = await list(sid);
   return dirs.length ? dirs : imgs.length ? [await meta(sid)] : [];
+}
+function firstVolume(vols) {  // 巻番号が最小の巻(番号が読めなければ並び順の先頭)
+  const nums = vols.map(v => volNum(v.name)).filter(n => n !== null);
+  return nums.length ? vols.find(v => volNum(v.name) === Math.min(...nums)) : vols[0];
 }
 function findVolume(vols, spec) {
   const n = Number(spec);
@@ -177,7 +173,7 @@ async function getReaderData() {
     rtl: C.default_direction === 'rtl', mode: C.default_mode };
 }
 
-window.Drv = { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, findVolume, resolvePage, animeFor, cookiePos, vlabel, U,
+window.Drv = { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, firstVolume, findVolume, resolvePage, animeFor, cookiePos, vlabel, U,
   lastSeries: () => (document.cookie.split('; ').find(c => c.startsWith('last=')) || '').slice(5) };
 window.getReaderData = getReaderData;
 })();
