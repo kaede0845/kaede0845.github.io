@@ -1,6 +1,6 @@
 /* index.html(Jinja)と app.py のルートをブラウザ側で再現。マークアップ/クラスは元のまま */
 (() => {
-const { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, findVolume, resolvePage, animeFor, cookiePos, vlabel, U } = Drv;
+const { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, findVolume, resolvePage, animeFor, cookiePos, vlabel, U, lastSeries } = Drv;
 const main = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let seq = 0;
@@ -35,18 +35,20 @@ const fail = msg => page('エラー', '', '', msg);
 async function home() {
   if (!C.folders.length) return page('設定が必要です', '', '', 'config.js の folders に参照するフォルダを指定してください。');
   const libs = [];
-  for (const r of await roots()) {
-    const series = await isSeriesRoot(r) ? [r] : (await list(r.id)).dirs;
-    libs.push({ name: r.name, series: await Promise.all(series.map(makeCard)) });
-  }
+  for (const r of await roots()) libs.push({ name: r.name, series: await isSeriesRoot(r) ? [r] : (await list(r.id)).dirs });
+  const all = libs.flatMap(l => l.series);
+  if (!all.length) return page('ライブラリ', '<p class="empty">漫画フォルダがありません。</p>');
+  // 4つのボタンは1組だけ。対象は最後に読んだ作品(なければ先頭)
+  const cur = all.find(s => s.id === lastSeries()) || all[0], card = await makeCard(cur);
   let notices = [];
   try { notices = (await (await fetch('announcements.json', { cache: 'no-cache' })).json()).slice().reverse().slice(0, C.announce_limit) } catch (e) {}
   const nhtml = notices.length ? `<section class="notices" aria-label="お知らせ">${notices.map(n => `
     <div class="card notice"><div class="meta">${esc(n.created)}</div>${n.title ? `<b>${esc(n.title)}</b>` : ''}<p>${esc(n.body)}</p></div>`).join('')}</section>` : '';
-  const body = libs.map(l => (libs.length > 1 ? `<h2 class="shelf">${esc(l.name)}</h2>` : '') +
-    (l.series.length ? l.series.map(c => `<div class="card"><h2><a href="${c.url}">${esc(c.name)}</a></h2>${actions(c)}</div>`).join('')
-      : `<p class="empty">この棚には漫画フォルダがありません。</p>`)).join('');
-  page('ライブラリ', nhtml + body);
+  const main_ = `<div class="card"><h2><a href="${card.url}">${esc(card.name)}</a></h2>${actions(card)}</div>`;
+  const shelves = all.length > 1 ? libs.filter(l => l.series.length).map(l =>
+    `<h2 class="shelf">${esc(libs.length > 1 ? l.name : '作品一覧')}</h2><div class="list">${l.series.map(s =>
+      `<a class="item" href="${U.folder(s.id)}"><span>${esc(s.name)}</span>${s.id === cur.id ? '<small class="badge">ボタンの対象</small>' : ''}</a>`).join('')}</div>`).join('') : '';
+  page('ライブラリ', nhtml + main_ + shelves);
 }
 
 async function folder(fid) {

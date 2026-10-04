@@ -30,6 +30,9 @@ async function cache(key, fn) {
 }
 
 /* ---------- Drive操作 ---------- */
+let pm = {};  // 子ID -> 親ID (APIキー経由だと parents が返らないので、listの結果から記録する)
+try { pm = JSON.parse(localStorage.getItem('pm') || '{}') } catch (e) {}
+const savePm = () => { try { localStorage.setItem('pm', JSON.stringify(pm)) } catch (e) {} };
 const natcmp = (a, b) => a.name.localeCompare(b.name, 'ja', { numeric: true, sensitivity: 'base' });
 const meta = fid => cache('m:' + fid, () => api('files/' + fid, { fields: 'id,name,mimeType,parents', supportsAllDrives: true }));
 const list = fid => cache('l:' + fid, async () => {
@@ -42,22 +45,43 @@ const list = fid => cache('l:' + fid, async () => {
     files = files.concat(res.files || []);
     pageToken = res.nextPageToken;
   } while (pageToken);
+  files.forEach(f => { pm[f.id] = fid }); savePm();
   return { dirs: files.filter(f => f.mimeType === FOLDER).sort(natcmp), imgs: files.filter(f => f.mimeType.startsWith('image/')).sort(natcmp) };
 });
 async function roots() {
   return Promise.all(C.folders.map(async f => { const m = await meta(f.id); return { id: m.id, name: f.name || m.name, series: f.series } }));
 }
-async function ancestors(fid, limit = 15) {
-  const rootIds = new Set((await roots()).map(r => r.id)), chain = [];
+async function walk(fid, rootIds, limit) {
+  const chain = [];
   let cur = fid;
   for (let i = 0; i < limit; i++) {
     const m = await meta(cur);
     chain.unshift(m);
     if (rootIds.has(m.id)) return chain;
-    if (!m.parents?.length) return null;
-    cur = m.parents[0];
+    const p = pm[cur] || m.parents?.[0];
+    if (!p) return null;
+    cur = p;
   }
   return null;
+}
+async function discover(fid, rs, maxDepth = 5) {  // 親が分からないとき、設定フォルダから下へ辿って探す
+  let level = rs.map(r => r.id);
+  for (let d = 0; d < maxDepth && level.length; d++) {
+    const next = [];
+    for (const id of level) {
+      const { dirs } = await list(id);
+      if (dirs.some(x => x.id === fid)) return true;
+      next.push(...dirs.map(x => x.id));
+    }
+    level = next;
+  }
+  return false;
+}
+async function ancestors(fid, limit = 15) {
+  const rs = await roots(), rootIds = new Set(rs.map(r => r.id));
+  let chain = await walk(fid, rootIds, limit);
+  if (!chain && await discover(fid, rs)) chain = await walk(fid, rootIds, limit);
+  return chain;
 }
 
 /* ---------- 漫画・巻 ---------- */
@@ -137,6 +161,7 @@ async function getReaderData() {
   const title = last.id === sid ? last.name : `${series.name} ${vlabel(last.name)}`;
   const src = f => f.thumbnailLink ? f.thumbnailLink.replace(/=[swh]\d+[\w-]*$/, '=' + C.image_size)
     : `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${C.apiKey}`;  // サムネが無い画像は原本を直接取得
+  document.cookie = `last=${sid}; max-age=31536000; path=/; samesite=lax`;
   document.title = title;
   document.getElementById('ttl').textContent = title;
   document.querySelectorAll('[data-back]').forEach(a => { a.href = back });
@@ -145,6 +170,7 @@ async function getReaderData() {
     rtl: C.default_direction === 'rtl', mode: C.default_mode };
 }
 
-window.Drv = { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, findVolume, resolvePage, animeFor, cookiePos, vlabel, U };
+window.Drv = { C, meta, list, roots, ancestors, isSeriesRoot, seriesOf, volumesOf, findVolume, resolvePage, animeFor, cookiePos, vlabel, U,
+  lastSeries: () => (document.cookie.split('; ').find(c => c.startsWith('last=')) || '').slice(5) };
 window.getReaderData = getReaderData;
 })();
