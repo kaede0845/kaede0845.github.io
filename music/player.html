@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>音楽プレイヤー</title>
     <link rel="stylesheet" href="style.css">
+    <!-- ID3タグ等のメタデータ＆サムネイルを読み込むライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 </head>
 <body class="player-page">
 <div id="player-container">
@@ -16,7 +18,10 @@
 
     <div class="player-body">
         <div class="now-playing">
-            <div class="disc-art">🎵</div>
+            <div class="disc-art" id="disc-art-container">
+                <span id="default-art">🎵</span>
+                <img id="thumbnail-img" src="" alt="Thumbnail" style="display: none;">
+            </div>
             <h2 id="track-title">曲名読み込み中…</h2>
         </div>
 
@@ -48,8 +53,8 @@
     </div>
 </div>
 
-<script src="config.js?v=1"></script>
-<script src="drive.js?v=1"></script>
-<script src="player.js?v=1"></script>
+<script src="config.js?v=2"></script>
+<script src="drive.js?v=2"></script>
+<script src="player.js?v=2"></script>
 </body>
 </html>

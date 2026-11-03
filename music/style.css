@@ -27,7 +27,11 @@ button:hover,.btn:hover{border-color:var(--acc)}
 .player-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line);font-size:13px;color:var(--sub)}
 .player-body{flex:1;display:flex;flex-direction:column;gap:20px;padding:20px 0;overflow:hidden}
 .now-playing{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
-.disc-art{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#2e333d,#12141c);display:flex;align-items:center;justify-content:center;font-size:40px;border:3px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,0.5);animation:spin 10s linear infinite paused}
+
+/* ディスクアート（サムネイル / デフォルトアイコン） */
+.disc-art{width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,#2e333d,#12141c);display:flex;align-items:center;justify-content:center;font-size:40px;border:3px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow:hidden;position:relative}
+.disc-art img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+
 .now-playing h2{margin:0;font-size:18px;word-break:break-all}
 .controls-area{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px}
 .time-slider-container{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--sub)}

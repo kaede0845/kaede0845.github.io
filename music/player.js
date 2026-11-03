@@ -21,6 +21,34 @@ const loadTrack = (idx, autoPlay = true) => {
     el.classList.toggle('active', i === currentIdx);
   });
 
+  // サムネイルの初期化（読み込み中はデフォルト表示）
+  const thumbImg = $('#thumbnail-img');
+  const defaultArt = $('#default-art');
+  thumbImg.style.display = 'none';
+  defaultArt.style.display = 'block';
+
+  // 音楽ファイルからメタデータ（サムネイル）を取得
+  if (window.jsmediatags) {
+    window.jsmediatags.read(track.src, {
+      onSuccess: function(tag) {
+        const picture = tag.tags.picture;
+        if (picture) {
+          let base64String = "";
+          for (let i = 0; i < picture.data.length; i++) {
+            base64String += String.fromCharCode(picture.data[i]);
+          }
+          const base64 = window.btoa(base64String);
+          thumbImg.src = `data:${picture.format};base64,${base64}`;
+          thumbImg.style.display = 'block';
+          defaultArt.style.display = 'none';
+        }
+      },
+      onError: function(error) {
+        console.log("No tags found or error:", error);
+      }
+    });
+  }
+
   if (autoPlay) {
     audio.play().then(() => {
       isPlaying = true;
