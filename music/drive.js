@@ -97,8 +97,7 @@ async function ancestors(fid, limit = 15) {
 }
 
 const U = {
-  home: 'index.html#/',
-  folder: id => `index.html#/f/${id}`,
+  home: 'player.html', // ホームに戻るボタン等もプレイヤーに戻す
   play: (id, idx = 0) => `player.html?v=${id}&i=${idx}`
 };
 
