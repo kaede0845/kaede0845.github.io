@@ -104,14 +104,15 @@ const U = {
 /* ---------- プレイヤー用データローダー ---------- */
 async function getPlayerData() {
   const q = new URLSearchParams(location.search), fid = q.get('v') || '';
-  if (!ID_RE.test(fid)) { location.replace(U.home); return new Promise(() => {}) }
-  const chain = await ancestors(fid);
-  if (!chain) { location.replace(U.home); return new Promise(() => {}) }
-  const { tracks } = await list(fid);
-  if (!tracks.length) { location.replace(U.folder(fid)); return new Promise(() => {}) }
   
-  const last = chain[chain.length - 1];
-  const title = last.name;
+  // vパラメータがない場合（直接開かれた場合など）、config.js の最初のフォルダを見るようにフォールバック
+  const targetId = fid || C.folders[0]?.id;
+  if (!ID_RE.test(targetId)) {
+    console.error("フォルダIDが見つかりません");
+    return { title: "エラー", tracks: [], back: "../index.html" };
+  }
+
+  const { tracks } = await list(targetId);
   const startIdx = parseInt(q.get('i')) || 0;
   
   const trackList = tracks.map((f, index) => ({
@@ -120,7 +121,15 @@ async function getPlayerData() {
     src: `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${C.apiKey}`
   }));
 
-  return { fid, title, startIdx, tracks: trackList, back: U.folder(fid) };
+  const m = await meta(targetId);
+
+  return { 
+    fid: targetId, 
+    title: m.name, 
+    startIdx: startIdx, 
+    tracks: trackList, 
+    back: "../index.html" 
+  };
 }
 
 window.Drv = { C, meta, list, roots, ancestors, U };
