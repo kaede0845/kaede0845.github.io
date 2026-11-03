@@ -8,7 +8,8 @@ let isShuffle = false;
 let isRepeat = false;
 
 const loadTrack = (idx, autoPlay = true) => {
-  if (idx < 0 || idx >= D.tracks.length) return;
+  if (!D.tracks || D.tracks.length === 0) return;
+  if (idx < 0 || idx >= D.tracks.length) idx = 0;
   currentIdx = idx;
   const track = D.tracks[currentIdx];
   audio.src = track.src;
@@ -29,24 +30,28 @@ const loadTrack = (idx, autoPlay = true) => {
 
   // 音楽ファイルからメタデータ（サムネイル）を取得
   if (window.jsmediatags) {
-    window.jsmediatags.read(track.src, {
-      onSuccess: function(tag) {
-        const picture = tag.tags.picture;
-        if (picture) {
-          let base64String = "";
-          for (let i = 0; i < picture.data.length; i++) {
-            base64String += String.fromCharCode(picture.data[i]);
+    try {
+      window.jsmediatags.read(track.src, {
+        onSuccess: function(tag) {
+          const picture = tag.tags.picture;
+          if (picture) {
+            let base64String = "";
+            for (let i = 0; i < picture.data.length; i++) {
+              base64String += String.fromCharCode(picture.data[i]);
+            }
+            const base64 = window.btoa(base64String);
+            thumbImg.src = `data:${picture.format};base64,${base64}`;
+            thumbImg.style.display = 'block';
+            defaultArt.style.display = 'none';
           }
-          const base64 = window.btoa(base64String);
-          thumbImg.src = `data:${picture.format};base64,${base64}`;
-          thumbImg.style.display = 'block';
-          defaultArt.style.display = 'none';
+        },
+        onError: function(error) {
+          console.log("No tags found or CORS restricted:", error);
         }
-      },
-      onError: function(error) {
-        console.log("No tags found or error:", error);
-      }
-    });
+      });
+    } catch (e) {
+      console.log("jsmediatags error:", e);
+    }
   }
 
   if (autoPlay) {
@@ -63,6 +68,7 @@ const updatePlayBtn = () => {
 
 // プレイリスト描画
 const renderPlaylist = () => {
+  if (!D.tracks) return;
   const html = D.tracks.map((t, i) => `
     <div class="playlist-item ${i === currentIdx ? 'active' : ''}" data-idx="${i}">
       <span>${i + 1}. ${t.title}</span>
