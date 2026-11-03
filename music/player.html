@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>音楽プレイヤー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="player-page">
+<div id="player-container">
+    <header class="player-header">
+        <a class="btn" id="back" href="index.html">← 戻る</a>
+        <span id="album-title">アルバム名</span>
+        <span id="cnt">0 / 0</span>
+    </header>
+
+    <div class="player-body">
+        <div class="now-playing">
+            <div class="disc-art">🎵</div>
+            <h2 id="track-title">曲名読み込み中…</h2>
+        </div>
+
+        <div class="controls-area">
+            <div class="time-slider-container">
+                <span id="current-time">0:00</span>
+                <input type="range" id="seek" min="0" max="100" value="0">
+                <span id="duration">0:00</span>
+            </div>
+
+            <div class="main-buttons">
+                <button id="shuffle" class="sub-btn">🔀</button>
+                <button id="prev" class="btn">⏮ 前へ</button>
+                <button id="play-pause" class="btn pri">▶ 再生</button>
+                <button id="next" class="btn">次へ ⏭</button>
+                <button id="repeat" class="sub-btn">🔁</button>
+            </div>
+
+            <div class="volume-container">
+                <span>🔊</span>
+                <input type="range" id="volume" min="0" max="1" step="0.01" value="1">
+            </div>
+        </div>
+
+        <div class="playlist-container">
+            <h3>プレイリスト</h3>
+            <div id="playlist"></div>
+        </div>
+    </div>
+</div>
+
+<script src="config.js?v=1"></script>
+<script src="drive.js?v=1"></script>
+<script src="player.js?v=1"></script>
+</body>
+</html>
